@@ -1,3 +1,7 @@
+using ContactManagerWebApplication.Models;
+using ContactManagerWebApplication.Services;
+using Microsoft.EntityFrameworkCore;
+
 namespace ContactManagerWebApplication
 {
     public class Program
@@ -5,6 +9,11 @@ namespace ContactManagerWebApplication
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(
+                builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            builder.Services.AddScoped<PersonService>();
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
@@ -20,15 +29,14 @@ namespace ContactManagerWebApplication
             }
 
             app.UseHttpsRedirection();
+
             app.UseStaticFiles();
 
             app.UseRouting();
 
-            app.UseAuthorization();
-
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
+                pattern: "{controller=Person}/{action=Index}/{id?}");
 
             app.Run();
         }

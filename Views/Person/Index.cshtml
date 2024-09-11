@@ -1,0 +1,92 @@
+﻿@model IEnumerable<PersonEntity>
+@using System.Globalization;
+
+<h2>Person Data</h2>
+
+<form asp-action="UploadNewCsvFile" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" />
+    <input type="submit" value="Upload CSV" />
+</form>
+
+<table id="personTable" class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Date of Birth</th>
+            <th>Married</th>
+            <th>Phone</th>
+            <th>Salary</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var person in Model)
+        {
+            <tr data-id="@person.Id">
+                <td contenteditable="true">@person.Name</td>
+                <td contenteditable="true">@person.DateOfBirth.ToString("yyyy-MM-dd")</td>
+                <td contenteditable="true">@person.Married</td>
+                <td contenteditable="true">@person.Phone</td>
+                <td contenteditable="true">@person.Salary.ToString(CultureInfo.InvariantCulture)</td>
+                <td>
+                    <button class="deleteBtn btn btn-danger">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#personTable').DataTable({
+                "paging": true,
+                "searching": true,
+                "ordering": true
+            });
+
+            // Inline editing
+            $('#personTable').on('blur', 'td[contenteditable="true"]', function () {
+                var row = $(this).closest('tr');
+                var id = row.data('id');
+                var person = {
+                    Id: id,
+                    Name: row.find('td:eq(0)').text(),
+                    DateOfBirth: row.find('td:eq(1)').text(),
+                    Married: row.find('td:eq(2)').text() === "true",
+                    Phone: row.find('td:eq(3)').text(),
+                    Salary: row.find('td:eq(4)').text()
+                };
+
+                $.ajax({
+                    url: '/Person/UpdatePersonInfo',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(person),
+                    success: function () {
+                        alert('Updated successfully');
+                    }
+                });
+            });
+
+            // Delete record
+            $('.deleteBtn').click(function () {
+                var row = $(this).closest('tr');
+                var id = row.data('id');
+
+                $.ajax({
+                    url: '/Person/DeletePersonInfo',
+                    type: 'POST',
+                    data: { id: id },
+                    success: function () {
+                        row.remove();
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.19.2/jquery.validate.min.js"></script>
+    <script src="https://ajax.aspnetcdn.com/ajax/mvc/5.2.3/jquery.validate.unobtrusive.min.js"></script>
+}
