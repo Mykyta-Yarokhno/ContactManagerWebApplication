@@ -8,6 +8,7 @@
     <input type="submit" value="Upload CSV" />
 </form>
 
+
 <table id="personTable" class="table table-bordered table-striped">
     <thead>
         <tr>
@@ -23,11 +24,11 @@
         @foreach (var person in Model)
         {
             <tr data-id="@person.Id">
-                <td contenteditable="true">@person.Name</td>
-                <td contenteditable="true">@person.DateOfBirth.ToString("yyyy-MM-dd")</td>
-                <td contenteditable="true">@person.Married</td>
-                <td contenteditable="true">@person.Phone</td>
-                <td contenteditable="true">@person.Salary.ToString(CultureInfo.InvariantCulture)</td>
+                <td >@person.Name</td>
+                <td >@person.DateOfBirth.ToString("yyyy-MM-dd")</td>
+                <td >@person.Married</td>
+                <td >@person.Phone</td>
+                <td >@person.Salary.ToString(CultureInfo.InvariantCulture)</td>
                 <td>
                     <button class="deleteBtn btn btn-danger">Delete</button>
                 </td>
@@ -38,6 +39,9 @@
 
 @section Scripts {
     <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
     <script>
         $(document).ready(function () {
             $('#personTable').DataTable({
@@ -46,9 +50,71 @@
                 "ordering": true
             });
 
-            // Inline editing
-            $('#personTable').on('blur', 'td[contenteditable="true"]', function () {
-                var row = $(this).closest('tr');
+            //Inline Editing
+            let table = document.getElementById('personTable');
+
+            let editingTd;
+
+            table.onclick = function (event) {
+
+                let target = event.target.closest('.edit-cancel,.edit-ok,td');
+
+                if (!table.contains(target)) return;
+
+                if (target.className == 'edit-cancel') {
+                    finishTdEdit(editingTd.elem, false);
+                } 
+                else if (target.className == 'edit-ok') {
+                    let row = $(editingTd.elem.closest('tr'));
+
+                    finishTdEdit(editingTd.elem, true);
+
+                    updatePersonInfo(row);
+                } 
+                else if (target.nodeName == 'TD') {
+                    if (editingTd) 
+                        return; 
+
+                    makeTdEditable(target);
+                }
+
+            };
+
+            function makeTdEditable(td) {
+
+                if (td.querySelector('button')) {
+                    return; 
+                }
+
+                editingTd = {
+                    elem: td,
+                    data: td.innerHTML
+                };
+
+                let input = document.createElement('input');
+                input.style.width = td.clientWidth + 'px';
+                input.style.height = td.clientHeight + 'px';
+
+                input.value = td.innerHTML;
+                td.innerHTML = '';
+                td.appendChild(input);
+                input.focus();
+
+                td.insertAdjacentHTML("beforeEnd",
+                    '<div class="edit-controls"><button class="edit-ok">OK</button><button class="edit-cancel">CANCEL</button></div>'
+                );
+            }
+
+            function finishTdEdit(td, isOk) {
+                if (isOk) {
+                    td.innerHTML = td.firstChild.value;
+                } else {
+                    td.innerHTML = editingTd.data;
+                }
+                editingTd = null;
+            }
+
+            function updatePersonInfo(row) {
                 var id = row.data('id');
                 var person = {
                     Id: id,
@@ -68,7 +134,7 @@
                         alert('Updated successfully');
                     }
                 });
-            });
+            };
 
             // Delete record
             $('.deleteBtn').click(function () {
@@ -86,7 +152,4 @@
             });
         });
     </script>
-
-    <script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.19.2/jquery.validate.min.js"></script>
-    <script src="https://ajax.aspnetcdn.com/ajax/mvc/5.2.3/jquery.validate.unobtrusive.min.js"></script>
 }

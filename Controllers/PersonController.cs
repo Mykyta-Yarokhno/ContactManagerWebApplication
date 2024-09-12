@@ -27,59 +27,60 @@ namespace ContactManagerWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> UploadNewCsvFile(IFormFile file)
         {
-            if (file != null && file.Length > 0)
+            if (file == null || file.Length == 0)
+                return BadRequest("File is empty");
+
+            var persons = new List<PersonEntity>();
+
+            using (var streamReader = new StreamReader(file.OpenReadStream()))
             {
-                var persons = new List<PersonEntity>();
+                var cultureInfo = new CultureInfo("en-US");
 
-                using (var streamReader = new StreamReader(file.OpenReadStream()))
+                // Skip CSV header 
+                streamReader.ReadLine();
+
+                string? line;
+
+                while ((line = streamReader.ReadLine()) != null)
                 {
-                    var cultureInfo = new CultureInfo("en-US");
+                    var values = line.Split(',');
 
-                    // Skip CSV header 
-                    streamReader.ReadLine();
-
-                    string? line;
-
-                    while ((line = streamReader.ReadLine()) != null)
+                    if (values.Length == 5)
                     {
-                        var values = line.Split(',');
-
-                        if (values.Length == 5)
+                        try
                         {
-                            try
+                            var person = new PersonEntity
                             {
-                                var person = new PersonEntity
-                                {
-                                    Name = values[0],
-                                    DateOfBirth = DateTime.Parse(values[1]),
-                                    Married = bool.Parse(values[2]),
-                                    Phone = values[3],
-                                    Salary = decimal.Parse(values[4], cultureInfo)
-                                };
+                                Name = values[0],
+                                DateOfBirth = DateTime.Parse(values[1]),
+                                Married = bool.Parse(values[2]),
+                                Phone = values[3],
+                                Salary = decimal.Parse(values[4], cultureInfo)
+                            };
 
-                                persons.Add(person);
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"Ошибка при обработке строки: {ex.Message}");
-                            }
+                            persons.Add(person);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Ошибка при обработке строки: {ex.Message}");
                         }
                     }
                 }
-
-                if (persons.Count > 0)
-                    await _personService.RegisterPerson(persons);
-                    
             }
 
+            if (persons.Count > 0)
+                await _personService.RegisterPerson(persons);
+                    
             return RedirectToAction("Index");
         }
 
         [HttpPost]
         public async Task<IActionResult> UpdatePersonInfo([FromBody] PersonEntity person)
         {
-            if(person != null)
-                await _personService.UpdatePersonInfo(person);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            await _personService.UpdatePersonInfo(person);
 
             return Ok(person);
         }
@@ -89,8 +90,10 @@ namespace ContactManagerWebApplication.Controllers
         {
             var person =  _personService.FindPerson(id);
 
-            if (person != null)
-                await _personService.DeletePersonInfo(person);
+            if (person == null)
+                return NotFound();
+
+            await _personService.DeletePersonInfo(person);
 
             return Ok();
         }
