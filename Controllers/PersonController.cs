@@ -62,7 +62,7 @@ namespace ContactManagerWebApplication.Controllers
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"Ошибка при обработке строки: {ex.Message}");
+                            Console.WriteLine($"Error: {ex.Message}");
                         }
                     }
                 }

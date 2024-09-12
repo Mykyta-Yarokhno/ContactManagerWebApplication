@@ -10,7 +10,8 @@ namespace ContactManagerWebApplication.Models
         public string Name { get; set; }
 
         [Required(ErrorMessage = "Date of Birth is required")]
-        [DataType(DataType.Date)]
+        [DisplayFormat(ApplyFormatInEditMode = true, DataFormatString = "{0:yyyy-MM-dd}")]
+        [DataType(DataType.Date , ErrorMessage = "Please enter a valid date in the format YYYY-MM-DD")]
         public DateTime DateOfBirth { get; set; }
 
         [Required]
