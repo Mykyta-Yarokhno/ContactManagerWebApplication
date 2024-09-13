@@ -23,7 +23,7 @@ This is a .NET web application that allows users to upload CSV files containing 
 
 ## Technologies
 
-- **.NET 6.0**: Core framework for building the web application.
+- **.NET 8.0**: Core framework for building the web application.
 - **ASP.NET Core MVC**: For handling the web requests and serving views.
 - **Entity Framework Core**: For database operations and communication with MS SQL Server.
 - **MS SQL Server**: For data storage.
