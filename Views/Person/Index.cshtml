@@ -38,6 +38,7 @@
 </table>
 
 @section Scripts {
+
     <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
 
     <script>
@@ -64,6 +65,13 @@
                 } 
                 else if (target.className == 'edit-ok') {
                     let row = $(editingTd.elem.closest('tr'));
+
+                    // Validate
+                    if (!editingTd.elem.firstChild.checkValidity()) {
+                        alert(editingTd.elem.firstChild.validationMessage);
+
+                        return;
+                    }
 
                     finishTdEdit(editingTd.elem, true);
 
@@ -92,8 +100,11 @@
                 let input = document.createElement('input');
                 input.style.width = td.clientWidth + 'px';
                 input.style.height = td.clientHeight + 'px';
-
                 input.value = td.innerHTML;
+
+                input.setAttribute('required', 'true');
+                input.setAttribute('data-error-message-required', 'Element is required!');
+
                 td.innerHTML = '';
                 td.appendChild(input);
                 input.focus();
