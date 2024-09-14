@@ -51,6 +51,7 @@
 
             //Inline Editing
             let table = document.getElementById('personTable');
+            let columnTypes = ["string", "date", "bool", "phone", "currency"]
 
             let editingTd;
 
@@ -66,11 +67,31 @@
                 else if (target.className == 'edit-ok') {
                     let row = $(editingTd.elem.closest('tr'));
 
-                    // Validate
-                    if (!editingTd.elem.firstChild.checkValidity()) {
-                        alert(editingTd.elem.firstChild.validationMessage);
+                    if (editingTd.data == editingTd.elem.firstChild.value) {
+                        
+                        // There are no changes
+                        finishTdEdit(editingTd.elem, true);
 
                         return;
+                    }
+
+                    // Validate
+                    if (editingTd.elem.firstChild.type == 'tel') {
+                        if (!(/^(?:\+\d{1,3}[\s.-]?)?(\(?\d{1,4}\)?[\s.-]?)?\d{1,4}[\s.-]?\d{1,4}[\s.-]?\d{1,9}$/.test(editingTd.elem.firstChild.value))) {
+                            alert("Invalid format");
+
+                            return;
+                        }
+                    }
+                    else if (editingTd.elem.firstChild.type == 'checkbox') {
+                        editingTd.elem.firstChild.value = (editingTd.elem.firstChild.checked == true ? 'True' : 'False');
+                    }
+                    else {
+                        if (!editingTd.elem.firstChild.checkValidity()) {
+                            alert(editingTd.elem.firstChild.validationMessage);
+
+                            return;
+                        }
                     }
 
                     finishTdEdit(editingTd.elem, true);
@@ -86,10 +107,11 @@
 
             }
 
+
             function makeTdEditable(td) {
 
                 if (td.querySelector('button')) {
-                    return; 
+                    return;
                 }
 
                 editingTd = {
@@ -97,21 +119,76 @@
                     data: td.innerHTML
                 };
 
-                let input = document.createElement('input');
-                input.style.width = td.clientWidth + 'px';
-                input.style.height = td.clientHeight + 'px';
-                input.value = td.innerHTML;
 
-                input.setAttribute('required', 'true');
-                input.setAttribute('data-error-message-required', 'Element is required!');
+                let el = createEditControl(td, columnTypes[td.cellIndex]);
+
+                if (el.type == "checkbox") {
+                    el.checked = td.innerHTML == "True" ? true : false;
+                }
+                else
+                    el.value = td.innerHTML;
 
                 td.innerHTML = '';
-                td.appendChild(input);
-                input.focus();
+
+                td.appendChild(el);
+
+                el.focus();
 
                 td.insertAdjacentHTML("beforeEnd",
                     '<div class="edit-controls"><button class="edit-ok">OK</button><button class="edit-cancel">CANCEL</button></div>'
+
                 );
+            }
+
+            function createEditControl(td, type) {
+                let elInput;
+
+                switch (type) {
+                    case 'date':
+                        elInput = document.createElement('input');
+                        elInput.type = 'date';
+                        break;
+                    case 'bool':
+                        elInput = document.createElement('input');
+                        elInput.type = 'checkbox';
+                        break;
+                    case 'phone':
+                        elInput = document.createElement('input');
+                        elInput.type = 'tel';
+                        break;
+                    case 'currency':
+                        elInput = document.createElement('input');
+                        elInput.type = 'number';
+                        elInput.max = '1000000';
+                        elInput.step = '0.01';
+                        break;
+                    default:
+                        elInput = document.createElement('input');
+                }
+
+                elInput.style.width = td.clientWidth + 'px';
+                elInput.style.height = td.clientHeight + 'px';
+
+                applyControlValidation(elInput)
+
+                return elInput;
+            }
+
+            function applyControlValidation(elm) {
+                switch (elm.type) {
+                    case 'date':
+                        break;
+                    case 'checkbox':
+                        return;
+                    case 'tel':
+                        break;
+                    case 'number':
+                        break;
+                    default:
+                }
+
+                elm.setAttribute('required', 'true');
+                elm.setAttribute('data-error-message-required', 'Element is required!');
             }
 
             function finishTdEdit(td, isOk) {
